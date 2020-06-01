@@ -1,0 +1,42 @@
+lang -> expr+ SEMICOLON
+expr -> assign_expr|output_expr|if_expr|while_expr
+assign_expr -> value_expr ASSING_OP VAR SEMICOLON
+output_expr -> VAR OUTPUT_OP SEMICOLON
+value_expr -> value|arithm_expr
+value -> VAR|DIGIT
+arithm_expr -> value (OP value)+
+logical_expr -> value LOGICAL_OP value
+body -> LEFT_BR expr+ RIGHT_BR
+
+if_expr -> if_head body else_head body SEMICOLON
+if_head -> IF_KW LEFT_B logical_expr RIGHT_B
+else_head -> ELSE_KW
+
+while_expr -> while_head body SEMICOLON
+while_head -> WHILE_KW LEFT_B logical_expr RIGHT_B
+
+
+VAR -> [a-z]+
+DIGIT -> 0|([1-9][0-9]*)
+ASSIGN_OP -> ->
+OUTPUT_OP -> -->
+OP -> ADDITION_OP|SUBTRACTION_OP|MULTIPLICATION_OP|DIVISION_OP
+ADDITION_OP -> +
+SUBTRACTION_OP -> -
+MULTIPLICATION_OP -> *
+DIVISION_OP -> /
+LOGICAL_OP -> MORE_LOGICAL_OP|LESS_LOGICAL_OP|MORE_OR_EQUAL_LOGICAL_OP|LESS_OR_EQUAL_LOGICAL_OP|EQUAL_LOGICAL_OP
+MORE_LOGICAL_OP -> >
+LESS_LOGICAL_OP -> <
+MORE_OR_EQUAL_LOGICAL_OP -> >=
+LESS_OR_EQUAL_LOGICAL_OP -> <=
+EQUAL_LOGICAL_OP -> ==
+LEFR_B -> (
+RIGHT_B -> )
+LEFR_BR -> {
+RIGHT_BR -> }
+IF_KW -> ?
+ELSE_KW -> |
+WHILE_KW -> !
+BEGINNING -> :
+SEMICOLON -> .
