@@ -5,6 +5,5 @@ exception/LangParseException.class
 parser/Parser$ParseResult.class
 stack_machine/StackMachine.class
 CatUI.class
-stack_machine/RPN.class
 parser/Parser.class
 lexer/Lexer.class
