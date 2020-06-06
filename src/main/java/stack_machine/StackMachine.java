@@ -2,27 +2,21 @@ package stack_machine;
 
 import lexer.Lexem;
 import token.Token;
+import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 
 public class StackMachine{
-    private final List<Token> tokens;
-    private Integer tokenIndex;
     private Token current_token;
-    private final Map<String, Double> varTable = new HashMap<>();
     private final Stack<Token> stack = new Stack<>();
+    private Integer tokenIndex;
+    private final CatDoublyLinkedList<Token> tokens;
+    private final Map<String, Double> varTable = new HashMap<>();
 
-    public StackMachine(List<Token> tokens) {
+    public StackMachine(CatDoublyLinkedList<Token> tokens) {
         this.tokens = tokens;
         this.tokenIndex = -1;
         this.current_token = null;
-    }
-
-    private void iterate() {
-        tokenIndex += 1;
-        if (tokenIndex < tokens.size()) {
-            current_token = tokens.get(tokenIndex);
-        }
     }
 
     public Map<String, Double> canculate() {
@@ -30,6 +24,28 @@ public class StackMachine{
         doCanculate();
 
         return varTable;
+    }
+
+    public Token doArithmOp(Double first_element, Double second_element) {
+        Double arithm_res = 0.0;
+        if (current_token.getLexem() == Lexem.ADDITION_OP) {
+            arithm_res = second_element + first_element;
+        }
+        else if (current_token.getLexem() == Lexem.SUBTRACTION_OP) {
+            arithm_res = second_element - first_element;
+        }
+        else if (current_token.getLexem() == Lexem.MULTIPLICATION_OP) {
+            arithm_res = second_element * first_element;
+        }
+        else if (current_token.getLexem() == Lexem.DIVISION_OP) {
+            arithm_res = second_element / first_element;
+        }
+
+        return new Token(Lexem.DIGIT, arithm_res.toString());
+    }
+
+    public void doAssignOp(String first_element, String second_element) {
+        varTable.put(first_element, Double.parseDouble(second_element));
     }
 
     public void doCanculate() {
@@ -87,10 +103,6 @@ public class StackMachine{
         }
     }
 
-    public void doAssignOp(String first_element, String second_element) {
-        varTable.put(first_element, Double.parseDouble(second_element));
-    }
-
     public Token doLogicalOp(Double first_element, Double second_element) {
         boolean logical_res = false;
         if (current_token.getLexem() == Lexem.MORE_LOGICAL_OP) {
@@ -112,22 +124,10 @@ public class StackMachine{
         return new Token(Lexem.BOOL, Boolean.toString(logical_res));
     }
 
-    public Token doArithmOp(Double first_element, Double second_element) {
-        Double arithm_res = 0.0;
-        if (current_token.getLexem() == Lexem.ADDITION_OP) {
-            arithm_res = second_element + first_element;
+    private void iterate() {
+        tokenIndex += 1;
+        if (tokenIndex < tokens.size()) {
+            current_token = (Token) tokens.get(tokenIndex);
         }
-        else if (current_token.getLexem() == Lexem.SUBTRACTION_OP) {
-            arithm_res = second_element - first_element;
-        }
-        else if (current_token.getLexem() == Lexem.MULTIPLICATION_OP) {
-            arithm_res = second_element * first_element;
-        }
-        else if (current_token.getLexem() == Lexem.DIVISION_OP) {
-            arithm_res = second_element / first_element;
-        }
-
-        return new Token(Lexem.DIGIT, arithm_res.toString());
     }
-
 }

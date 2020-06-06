@@ -1,6 +1,7 @@
 package lexer;
 
 import token.Token;
+import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -17,36 +18,26 @@ public class Lexer {
         return rawInput;
     }
 
-    public List<Token> getTokens() throws Exception {
-        List<Token> tokens = new ArrayList<Token>();
+    public CatDoublyLinkedList<Token> getTokens() throws Exception {
+        CatDoublyLinkedList<Token> tokens = new CatDoublyLinkedList<Token>();
         int lineCounter = 0;
-
-        for (String line : getLines(rawInput)) {
+        CatDoublyLinkedList<String> tmp = getLines(rawInput);
+        for (int i = 0; i < tmp.size(); i++) {
+            String line = tmp.get(i).toString();
             try {
                 ++lineCounter;
-
-                // While line contains something (except spaces)
                 while (line.matches("(\\s*\\S+\\s*)+")) {
                     line = line.trim();
-
-                    // Assigning first value in enum
                     Lexem relevantLexem = Lexem.values()[0];
-
-                    // Modifying original regex pattern for our purpose
                     String real_regex = "^(" + relevantLexem.getPattern().pattern() + ")";
                     Matcher matcher = Pattern.compile(real_regex).matcher(line);
-
-                    // Finding relevant lexeme type or throwing exception
                     while (!matcher.find()) {
                         relevantLexem = getNextLexem(relevantLexem);
                         real_regex = "^(" + relevantLexem.getPattern().pattern() + ")";
                         matcher.usePattern(Pattern.compile(real_regex));
                     }
-                    // Relevant lexeme type was founded
-
                     String value = matcher.group(0);
-                    tokens.add(new Token(relevantLexem, value));
-                    // Replacing first founded value with spaces
+                    tokens.addBack(new Token(relevantLexem, value));
                     line = matcher.replaceFirst("");
                 }
             }
@@ -54,7 +45,6 @@ public class Lexer {
                 Scanner scanner = new Scanner(line);
                 String unknownSymbol = scanner.next();
                 scanner.close();
-
                 throw new Exception("Unknown symbol at line " + lineCounter + " : " + unknownSymbol);
             }
         }
@@ -65,7 +55,6 @@ public class Lexer {
     private Lexem getNextLexem(Lexem lexemType) throws IndexOutOfBoundsException {
         int curPos = lexemType.ordinal();
         Lexem[] lexem = Lexem.values();
-
         if (curPos >= lexem.length) {
             throw new IndexOutOfBoundsException();
         }
@@ -73,16 +62,15 @@ public class Lexer {
         return lexem[curPos + 1];
     }
 
-    private List<String> getLines(String str) {
+    private CatDoublyLinkedList<String> getLines(String str) {
         Scanner scanner = new Scanner(str);
-        List<String> lines = new ArrayList<String>();
-
+        CatDoublyLinkedList<String> lines = new CatDoublyLinkedList<String>();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            lines.add(line);
+            lines.addBack(line);
         }
-
         scanner.close();
+
         return lines;
     }
 }

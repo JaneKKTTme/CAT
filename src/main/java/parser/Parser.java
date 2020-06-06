@@ -3,11 +3,9 @@ package parser;
 import exception.LangParseException;
 import lexer.Lexem;
 import token.Token;
+import type.lists.CatDoublyLinkedList;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 public class Parser {
@@ -29,207 +27,89 @@ public class Parser {
         }
     }
 
-    private final List<Token> tokens;
-    private int pos = -1;
     private ParseResult most_depth_error_res;
+    private int pos = -1;
+    private final CatDoublyLinkedList<Token> tokens;
 
-    public Parser(List<Token> tokens) {
+    public Parser(CatDoublyLinkedList<Token> tokens) {
         this.tokens = tokens;
-    }
-
-    public List<Token> getTokens() {
-        return this.tokens;
-    }
-
-    public ParseResult lang() throws LangParseException {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {
-            return plusOperation((arg) -> {return expr();});
-        });
-
-        ParseResult result = andOperation(expressions);
-        if (!result.success) {
-            throw new LangParseException(most_depth_error_res.error_mes);
-        }
-
-        return result;
-    }
-
-    private ParseResult expr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg) -> {return assignExpr();});
-        expressions.add((arg) -> {return outputExpr();});
-        expressions.add((arg) -> {return ifExpr();});
-        expressions.add((arg) -> {return whileExpr();});
-
-        return orOperation(expressions);
-    }
-
-    private ParseResult assignExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return valueExpr();});
-        expressions.add((arg0) -> {return assignOp();});
-        expressions.add((arg0) -> {return var();});
-        expressions.add((arg0) -> {return semicolon();});
-
-        return andOperation(expressions);
-    }
-
-    private ParseResult outputExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return var();});
-        expressions.add((arg0) -> {return outputOp();});
-        expressions.add((arg0) -> {return semicolon();});
-
-        return andOperation(expressions);
-    }
-
-    private ParseResult ifExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return ifHead();});
-        expressions.add((arg0) -> {return body();});
-        expressions.add((arg0) -> {return elseHead();});
-        expressions.add((arg0) -> {return body();});
-        expressions.add((arg0) -> {return semicolon();});
-
-        return andOperation(expressions);
-    }
-
-    private ParseResult whileExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return whileHead();});
-        expressions.add((arg0) -> {return body();});
-        expressions.add((arg0) -> {return semicolon();});
-
-        return andOperation(expressions);
-    }
-
-    private ParseResult var() {
-        return matchToken(match(), Lexem.VAR);
-    }
-
-    private ParseResult assignOp() {
-        return matchToken(match(), Lexem.ASSIGN_OP);
-    }
-
-    private ParseResult outputOp() {
-        return matchToken(match(), Lexem.OUTPUT_OP);
-    }
-
-    private ParseResult value() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return var();});
-        expressions.add((arg0) -> {return digit();});
-
-        return orOperation(expressions);
-    }
-
-    private ParseResult digit() {
-        return matchToken(match(), Lexem.DIGIT);
-    }
-
-    private ParseResult op() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return additionalOp();});
-        expressions.add((arg0) -> {return subtractionOp();});
-        expressions.add((arg0) -> {return multiplicationOp();});
-        expressions.add((arg0) -> {return divisionOp();});
-
-        return orOperation(expressions);
     }
 
     private ParseResult additionalOp() {
         return matchToken(match(), Lexem.ADDITION_OP);
     }
 
-    private ParseResult subtractionOp() {
-        return matchToken(match(), Lexem.SUBTRACTION_OP);
+    private ParseResult andOperation(CatDoublyLinkedList<Function<Object, ParseResult>> expressions) {
+        CatDoublyLinkedList<ParseResult> results = new CatDoublyLinkedList<>();
+        for (int i = 0; i < expressions.size(); i++) {
+            Function<Object, ParseResult> func = (Function<Object, ParseResult>) expressions.get(i);
+            ParseResult cur_res = func.apply(null);
+            if (results.size() != 0) {
+                cur_res.depth += ((ParseResult) results.get(results.size() - 1)).depth;
+            }
+            if (!cur_res.success) {
+                return cur_res;
+            }
+            results.addBack(cur_res);
+        }
+
+        return (ParseResult) results.get(results.size() - 1);
     }
 
-    private ParseResult multiplicationOp() {
-        return matchToken(match(), Lexem.MULTIPLICATION_OP);
-    }
-
-    private ParseResult divisionOp() {
-        return matchToken(match(), Lexem.DIVISION_OP);
-    }
-
-    private ParseResult logicalExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return value();});
-        expressions.add((arg0) -> {return logicalOp();});
-        expressions.add((arg0) -> {return value();});
+    private ParseResult assignExpr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return valueExpr();});
+        expressions.addBack((arg0) -> {return assignOp();});
+        expressions.addBack((arg0) -> {return var();});
+        expressions.addBack((arg0) -> {return semicolon();});
 
         return andOperation(expressions);
     }
 
-    private ParseResult valueExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return value();});
-        expressions.add((arg0) -> {return arithmExpr();});
-
-        return orOperation(expressions);
+    private ParseResult assignOp() {
+        return matchToken(match(), Lexem.ASSIGN_OP);
     }
 
     private ParseResult arithmExpr() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return value();});
-        expressions.add((arg0) -> {
-            List<Function<Object, ParseResult>> and_expressions = new ArrayList<>();
-            and_expressions.add((arg) -> {return op();});
-            and_expressions.add((arg) -> {return value();});
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return value();});
+        expressions.addBack((arg0) -> {
+            CatDoublyLinkedList<Function<Object, ParseResult>> and_expressions = new CatDoublyLinkedList<>();
+            and_expressions.addBack((arg) -> {return op();});
+            and_expressions.addBack((arg) -> {return value();});
             return plusOperation((arg) -> andOperation(and_expressions));
         });
 
         return andOperation(expressions);
     }
 
-    private ParseResult logicalOp() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return moreLogicalOp();});
-        expressions.add((arg0) -> {return lessLogicalOp();});
-        expressions.add((arg0) -> {return moreOrEqualLogicalOp();});
-        expressions.add((arg0) -> {return lessOrEqualLogicalOp();});
-        expressions.add((arg0) -> {return equalLogicalOp();});
-
-        return orOperation(expressions);
-    }
-
-    private ParseResult moreLogicalOp() {
-        return matchToken(match(), Lexem.MORE_LOGICAL_OP);
-    }
-
-    private ParseResult lessLogicalOp() {
-        return matchToken(match(), Lexem.LESS_LOGICAL_OP);
-    }
-
-    private ParseResult moreOrEqualLogicalOp() {
-        return matchToken(match(), Lexem.MORE_OR_EQUAL_LOGICAL_OP);
-    }
-
-    private ParseResult lessOrEqualLogicalOp() {
-        return matchToken(match(), Lexem.LESS_OR_EQUAL_LOGICAL_OP);
-    }
-
-    private ParseResult equalLogicalOp() {
-        return matchToken(match(), Lexem.EQUAL_LOGICAL_OP);
+    private void back(int step) {
+        pos -= step;
     }
 
     private ParseResult body() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return leftBr();});
-        expressions.add((arg0) -> {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return leftBr();});
+        expressions.addBack((arg0) -> {
             return plusOperation((arg) -> {return expr();});
         });
-        expressions.add((arg0) -> {return rightBr();});
+        expressions.addBack((arg0) -> {return rightBr();});
 
         return andOperation(expressions);
     }
 
+    private ParseResult digit() {
+        return matchToken(match(), Lexem.DIGIT);
+    }
+
+    private ParseResult divisionOp() {
+        return matchToken(match(), Lexem.DIVISION_OP);
+    }
+
     private ParseResult elseHead() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return elseKeyword();});
-        expressions.add((arg0) -> {return body();});
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return elseKeyword();});
+        expressions.addBack((arg0) -> {return body();});
 
         return andOperation(expressions);
     }
@@ -238,75 +118,150 @@ public class Parser {
         return matchToken(match(), Lexem.ELSE_KW);
     }
 
-    private ParseResult ifHead() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return ifKeyword();});
-        expressions.add((arg0) -> {return leftB();});
-        expressions.add((arg0) -> {return logicalExpr();});
-        expressions.add((arg0) -> {return rightB();});
+    private ParseResult equalLogicalOp() {
+        return matchToken(match(), Lexem.EQUAL_LOGICAL_OP);
+    }
+
+    private ParseResult expr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return assignExpr();});
+        expressions.addBack((arg0) -> {return outputExpr();});
+        expressions.addBack((arg0) -> {return ifExpr();});
+        expressions.addBack((arg0) -> {return whileExpr();});
+
+        return orOperation(expressions);
+    }
+
+    public CatDoublyLinkedList<Token> getTokens() {
+        return this.tokens;
+    }
+
+    private ParseResult ifExpr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return ifHead();});
+        expressions.addBack((arg0) -> {return body();});
+        expressions.addBack((arg0) -> {return elseHead();});
+        expressions.addBack((arg0) -> {return body();});
+        expressions.addBack((arg0) -> {return semicolon();});
 
         return andOperation(expressions);
     }
 
-    private ParseResult rightB() {
-        return matchToken(match(), Lexem.RIGHT_B);
-    }
+    private ParseResult ifHead() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return ifKeyword();});
+        expressions.addBack((arg0) -> {return leftB();});
+        expressions.addBack((arg0) -> {return logicalExpr();});
+        expressions.addBack((arg0) -> {return rightB();});
 
-    private ParseResult leftB() {
-        return matchToken(match(), Lexem.LEFT_B);
-    }
-
-    private ParseResult rightBr() {
-        return matchToken(match(), Lexem.RIGHT_BR);
-    }
-
-    private ParseResult leftBr() {
-        return matchToken(match(), Lexem.LEFT_BR);
+        return andOperation(expressions);
     }
 
     private ParseResult ifKeyword() {
         return matchToken(match(), Lexem.IF_KW);
     }
 
-    private ParseResult whileHead() {
-        List<Function<Object, ParseResult>> expressions = new ArrayList<>();
-        expressions.add((arg0) -> {return whileKeyword();});
-        expressions.add((arg0) -> {return leftB();});
-        expressions.add((arg0) -> {return logicalExpr();});
-        expressions.add((arg0) -> {return rightB();});
+    public ParseResult lang() throws LangParseException {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {
+            return plusOperation((arg) -> {return expr();});
+        });
+        ParseResult result = andOperation(expressions);
+        if (!result.success) {
+            throw new LangParseException(most_depth_error_res.error_mes);
+        }
+
+        return result;
+    }
+
+    private ParseResult leftB() {
+        return matchToken(match(), Lexem.LEFT_B);
+    }
+
+    private ParseResult leftBr() {
+        return matchToken(match(), Lexem.LEFT_BR);
+    }
+
+    private ParseResult lessLogicalOp() {
+        return matchToken(match(), Lexem.LESS_LOGICAL_OP);
+    }
+
+    private ParseResult lessOrEqualLogicalOp() {
+        return matchToken(match(), Lexem.LESS_OR_EQUAL_LOGICAL_OP);
+    }
+
+    private ParseResult logicalExpr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return value();});
+        expressions.addBack((arg0) -> {return logicalOp();});
+        expressions.addBack((arg0) -> {return value();});
 
         return andOperation(expressions);
     }
 
-    private ParseResult whileKeyword() {
-        return matchToken(match(), Lexem.WHILE_KW);
+    private ParseResult logicalOp() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return moreLogicalOp();});
+        expressions.addBack((arg0) -> {return lessLogicalOp();});
+        expressions.addBack((arg0) -> {return moreOrEqualLogicalOp();});
+        expressions.addBack((arg0) -> {return lessOrEqualLogicalOp();});
+        expressions.addBack((arg0) -> {return equalLogicalOp();});
+
+        return orOperation(expressions);
     }
 
-    private ParseResult semicolon() {
-        return matchToken(match(), Lexem.SEMICOLON);
+    private Token match() {
+        return (Token) tokens.get(++pos);
     }
 
-    private ParseResult orOperation(List<Function<Object, ParseResult>> expressions) {
-        List<ParseResult> results = new ArrayList<>();
+    private ParseResult matchToken(Token token, Lexem type) {
+        if (!token.getLexem().equals(type)) {
+            return new ParseResult(false, 1, type + " expected, but " +
+                    token.getLexem().name() + ": " +
+                    token.getValue() + " found");
+        }
 
-        for (Function<Object, ParseResult> func : expressions) {
+        return new ParseResult(true, 1, "");
+    }
+
+    private ParseResult moreLogicalOp() {
+        return matchToken(match(), Lexem.MORE_LOGICAL_OP);
+    }
+
+    private ParseResult moreOrEqualLogicalOp() {
+        return matchToken(match(), Lexem.MORE_OR_EQUAL_LOGICAL_OP);
+    }
+
+    private ParseResult multiplicationOp() {
+        return matchToken(match(), Lexem.MULTIPLICATION_OP);
+    }
+
+    private ParseResult op() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return additionalOp();});
+        expressions.addBack((arg0) -> {return subtractionOp();});
+        expressions.addBack((arg0) -> {return multiplicationOp();});
+        expressions.addBack((arg0) -> {return divisionOp();});
+
+        return orOperation(expressions);
+    }
+
+    private ParseResult orOperation(CatDoublyLinkedList<Function<Object, ParseResult>> expressions) {
+        CatDoublyLinkedList<ParseResult> results = new CatDoublyLinkedList<>();
+        for (int i = 0; i < expressions.size(); i++) {
+            Function<Object, ParseResult> func = (Function<Object, ParseResult>) expressions.get(i);
             ParseResult cur_res = func.apply(null);
             if (cur_res.success) {
-                // System.out.println(new Throwable().fillInStackTrace().getStackTrace()[1].getMethodName() + "::OR::Matched: " + func);
                 return cur_res;
             }
             else {
-                // System.out.println(new Throwable().fillInStackTrace().getStackTrace()[1].getMethodName() + "::OR::Not matched: " + func);
-                results.add(cur_res);
-                // if func isn't the last
+                results.addBack(cur_res);
                 if (!func.equals(expressions.get(expressions.size() - 1))) {
                     back(cur_res.depth);
                 }
             }
         }
-
-        // If no one expression matches then store the most depth result
-        most_depth_error_res = Collections.max(results, new Comparator<ParseResult>() {
+        most_depth_error_res = Collections.max((Collection) results, new Comparator<ParseResult>() {
             public int compare(ParseResult left, ParseResult right) {
                 if (left.depth > right.depth) {
                     return 1;
@@ -319,45 +274,35 @@ public class Parser {
             }
         });
 
-        return results.get(results.size() - 1);
+        return (ParseResult) results.get(results.size() - 1);
     }
 
-    private ParseResult andOperation(List<Function<Object, ParseResult>> expressions) {
-        List<ParseResult> results = new ArrayList<>();
-        for (Function<Object, ParseResult> func : expressions) {
-            ParseResult cur_res = func.apply(null);
-            if (results.size() != 0) {
-                cur_res.depth += results.get(results.size() - 1).depth;
-            }
+    private ParseResult outputExpr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return var();});
+        expressions.addBack((arg0) -> {return outputOp();});
+        expressions.addBack((arg0) -> {return semicolon();});
 
-            if (!cur_res.success) {
-                // System.out.println(new Throwable().fillInStackTrace().getStackTrace()[1].getMethodName() + "::AND::Not matched: " + func);
-                return cur_res;
-            }
+        return andOperation(expressions);
+    }
 
-            // System.out.println(new Throwable().fillInStackTrace().getStackTrace()[1].getMethodName() + "::AND::Matched: " + func);
-            results.add(cur_res);
-        }
-
-        return results.get(results.size() - 1);
+    private ParseResult outputOp() {
+        return matchToken(match(), Lexem.OUTPUT_OP);
     }
 
     private ParseResult plusOperation(Function<Object, ParseResult> expression) {
         ParseResult cur_res = new ParseResult();
         int depth_sum = 0;
         int counter = -1;
-
         while(cur_res.success) {
             ++counter;
             cur_res = expression.apply(null);
             depth_sum += cur_res.depth;
         }
-
         if (counter < 1) {
             back(depth_sum);
             return cur_res;
         }
-
         back(cur_res.depth);
         cur_res.depth = depth_sum - cur_res.depth;
         cur_res.success = true;
@@ -365,25 +310,62 @@ public class Parser {
         return cur_res;
     }
 
-    private Token match() {
-        // Token token = tokens.get(++pos);
-        // System.out.println("Current token = " + token + " on pos = " + pos);
-        // return token;
-        return tokens.get(++pos);
+    private ParseResult rightB() {
+        return matchToken(match(), Lexem.RIGHT_B);
     }
 
-    private void back(int step) {
-        pos -= step;
-        // System.out.println("back::pos = " + pos);
+    private ParseResult rightBr() {
+        return matchToken(match(), Lexem.RIGHT_BR);
     }
 
-    private ParseResult matchToken(Token token, Lexem type) {
-        if (!token.getLexem().equals(type)) {
-            return new ParseResult(false, 1, type + " expected, but " +
-                    token.getLexem().name() + ": " +
-                    token.getValue() + " found");
-        }
+    private ParseResult semicolon() {
+        return matchToken(match(), Lexem.SEMICOLON);
+    }
 
-        return new ParseResult(true, 1, "");
+    private ParseResult subtractionOp() {
+        return matchToken(match(), Lexem.SUBTRACTION_OP);
+    }
+
+    private ParseResult valueExpr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return value();});
+        expressions.addBack((arg0) -> {return arithmExpr();});
+
+        return orOperation(expressions);
+    }
+
+    private ParseResult whileExpr() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return whileHead();});
+        expressions.addBack((arg0) -> {return body();});
+        expressions.addBack((arg0) -> {return semicolon();});
+
+        return andOperation(expressions);
+    }
+
+    private ParseResult whileHead() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return whileKeyword();});
+        expressions.addBack((arg0) -> {return leftB();});
+        expressions.addBack((arg0) -> {return logicalExpr();});
+        expressions.addBack((arg0) -> {return rightB();});
+
+        return andOperation(expressions);
+    }
+
+    private ParseResult whileKeyword() {
+        return matchToken(match(), Lexem.WHILE_KW);
+    }
+
+    private ParseResult value() {
+        CatDoublyLinkedList<Function<Object, ParseResult>> expressions = new CatDoublyLinkedList<>();
+        expressions.addBack((arg0) -> {return var();});
+        expressions.addBack((arg0) -> {return digit();});
+
+        return orOperation(expressions);
+    }
+
+    private ParseResult var() {
+        return matchToken(match(), Lexem.VAR);
     }
 }

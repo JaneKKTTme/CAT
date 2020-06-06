@@ -30,8 +30,8 @@ Functionality
 - [x] Stack-machine is a computer that uses a LIFO stack to hold short-lived temporary values. Return table of values.
 
 **Additional part:**
-- [ ] Unlimited nested parentheses in math expresiions.
-- [ ] Implementation of a doubly linked list and using it in language.
+- [x] Unlimited nested parentheses in math expresiions.
+- [x] Implementation of a doubly linked list and using it in language.
 - [ ] Implementation of a hash table and using it in language.
 
 
