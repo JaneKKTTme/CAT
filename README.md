@@ -32,7 +32,7 @@ Functionality
 **Additional part:**
 - [x] Unlimited nested parentheses in math expresiions.
 - [x] Implementation of a doubly linked list and using it in language.
-- [ ] Implementation of a hash table and using it in language.
+- [x] Implementation of a hash table and using it in language.
 
 
 Grammar
