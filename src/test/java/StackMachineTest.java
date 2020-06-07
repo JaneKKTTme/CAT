@@ -3,12 +3,13 @@ import junit.framework.TestCase;
 import lexer.Lexem;
 import token.Token;
 import stack_machine.StackMachine;
+import type.hash.CatHashTable;
 import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 
 public class StackMachineTest extends TestCase {
-    private final Map<CatDoublyLinkedList<Token>, Map<String, Double>> canculateData = new HashMap<>();
+    private final CatHashTable<CatDoublyLinkedList<Token>, Map<String, Double>> canculateData = new CatHashTable<>();
 
     protected void setData() {
         CatDoublyLinkedList<Token> rpn_tokens = new CatDoublyLinkedList<>();
@@ -97,10 +98,10 @@ public class StackMachineTest extends TestCase {
 
     public void testCanculate() {
         setData();
-        for (Iterator iterator = canculateData.keySet().iterator(); iterator.hasNext();) {
-            StackMachine rpn = new StackMachine((CatDoublyLinkedList<Token>) iterator.next());
-            Map<String, Double> actual = rpn.canculate();
-            assertEquals(canculateData.get(iterator), actual);
+        for (int i = 0; i < canculateData.size(); i++) {
+            StackMachine rpn = new StackMachine((CatDoublyLinkedList<Token>) canculateData.get(i));
+            CatHashTable<String, Double> actual = rpn.canculate();
+            assertEquals(canculateData.get(i), actual);
         }
     }
 }

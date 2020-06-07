@@ -18,7 +18,7 @@ public class CatUI {
         }
         String rawInput = Files.readString(Paths.get(args[0]));
 
-        Lexer lexer = new Lexer(rawInput);
+        Lexer lexer = new Lexer(git rawInput);
         CatDoublyLinkedList<Token> lexer_result = lexer.getTokens();
         System.out.println("LEXER RESULT: " + lexer_result + "\n");
 

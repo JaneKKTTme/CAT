@@ -2,13 +2,14 @@ package stack_machine;
 
 import lexer.Lexem;
 import token.Token;
+import type.hash.CatHashTable;
 import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 
 public class ReversePolishNotation {
     private Token current_token;
-    private static Map<Lexem, Integer> lexemPriority = new HashMap<>();
+    private static CatHashTable<Lexem, Integer> lexemPriority = new CatHashTable<>();
     private CatDoublyLinkedList<Token> result;
     private Integer tokenIndex;
     private final CatDoublyLinkedList<Token> tokens;
@@ -50,15 +51,15 @@ public class ReversePolishNotation {
                     stack.push(current_token);
                 }
                 else {
-                    Integer stack_pr = lexemPriority.get(stack.peek().getLexem());
-                    Integer current_pr = lexemPriority.get(current_token.getLexem());
+                    Integer stack_pr = (Integer) lexemPriority.get(stack.peek().getLexem());
+                    Integer current_pr = (Integer) lexemPriority.get(current_token.getLexem());
                     while (stack_pr >= current_pr) {
                         expression_result.addBack(stack.pop());
                         if (stack.isEmpty()) {
                             break;
                         }
                         else {
-                            stack_pr = lexemPriority.get(stack.peek().getLexem());
+                            stack_pr = (Integer) lexemPriority.get(stack.peek().getLexem());
                         }
                     }
                     stack.push(current_token);

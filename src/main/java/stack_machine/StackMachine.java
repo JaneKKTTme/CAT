@@ -2,6 +2,7 @@ package stack_machine;
 
 import lexer.Lexem;
 import token.Token;
+import type.hash.CatHashTable;
 import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
@@ -11,7 +12,7 @@ public class StackMachine{
     private final Stack<Token> stack = new Stack<>();
     private Integer tokenIndex;
     private final CatDoublyLinkedList<Token> tokens;
-    private final Map<String, Double> varTable = new HashMap<>();
+    private final CatHashTable<String, Double> varTable = new CatHashTable<>();
 
     public StackMachine(CatDoublyLinkedList<Token> tokens) {
         this.tokens = tokens;
@@ -19,7 +20,7 @@ public class StackMachine{
         this.current_token = null;
     }
 
-    public Map<String, Double> canculate() {
+    public CatHashTable<String, Double> canculate() {
         iterate();
         doCanculate();
 
