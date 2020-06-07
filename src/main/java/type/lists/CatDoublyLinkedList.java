@@ -1,7 +1,7 @@
 package type.lists;
 
 public class CatDoublyLinkedList<T> implements BaseCatList{
-    private class CatNode<T> {
+    public class CatNode<T> {
         T value;
         CatNode previous;
         CatNode next;

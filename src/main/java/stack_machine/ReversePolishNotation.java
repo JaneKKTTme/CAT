@@ -2,45 +2,40 @@ package stack_machine;
 
 import lexer.Lexem;
 import token.Token;
-import type.hash.CatHashTable;
-import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 
 public class ReversePolishNotation {
     private Token current_token;
-    private static CatHashTable<Lexem, Integer> lexemPriority = new CatHashTable<>();
-    private CatDoublyLinkedList<Token> result;
+    private static Map<Lexem, Integer> lexemPriority = new HashMap<>();
+    private final List<Token> result;
     private Integer tokenIndex;
-    private final CatDoublyLinkedList<Token> tokens;
+    private final List<Token> tokens;
 
-    public ReversePolishNotation(CatDoublyLinkedList<Token> tokens) {
+    public ReversePolishNotation(List<Token> tokens) {
         this.tokens = tokens;
         this.tokenIndex = -1;
-        this.result = new CatDoublyLinkedList<Token>();
+        this.result = new ArrayList<>();
         this.current_token = null;
     }
 
-    public CatDoublyLinkedList<Token> doTranslationForBody() {
-        CatDoublyLinkedList<Token> body_result = new CatDoublyLinkedList<>();
+    public List<Token> doTranslationForBody() {
+        List<Token> body_result = new ArrayList<>();
         while (current_token.getLexem() != Lexem.RIGHT_BR) {
-            CatDoublyLinkedList tmp = doTranslationForExpressionOp(Lexem.SEMICOLON);
-            for (int i = 0; i < tmp.size(); i++) {
-                body_result.addBack((Token) tmp.get(i));
-            }
+            body_result.addAll(doTranslationForExpressionOp(Lexem.SEMICOLON));
         }
         iterate();
 
         return body_result;
     }
 
-    public CatDoublyLinkedList<Token> doTranslationForExpressionOp(Lexem lexem) {
-        CatDoublyLinkedList<Token> expression_result = new CatDoublyLinkedList<>();
+    public List<Token> doTranslationForExpressionOp(Lexem lexem) {
+        List<Token> expression_result = new ArrayList<>();
         Stack<Token> stack = new Stack<>();
         while (current_token.getLexem() != lexem) {
             if (current_token.getLexem() == Lexem.DIGIT || current_token.getLexem() == Lexem.VAR ||
                     current_token.getLexem() == Lexem.BOOL) {
-                expression_result.addBack(current_token);
+                expression_result.add(current_token);
             }
             else if (current_token.getLexem() == Lexem.ADDITION_OP || current_token.getLexem() == Lexem.SUBTRACTION_OP ||
                     current_token.getLexem() == Lexem.MULTIPLICATION_OP || current_token.getLexem() == Lexem.DIVISION_OP ||
@@ -54,7 +49,7 @@ public class ReversePolishNotation {
                     Integer stack_pr = (Integer) lexemPriority.get(stack.peek().getLexem());
                     Integer current_pr = (Integer) lexemPriority.get(current_token.getLexem());
                     while (stack_pr >= current_pr) {
-                        expression_result.addBack(stack.pop());
+                        expression_result.add(stack.pop());
                         if (stack.isEmpty()) {
                             break;
                         }
@@ -70,7 +65,7 @@ public class ReversePolishNotation {
             }
             else if (current_token.getLexem() == Lexem.RIGHT_B) {
                 while (stack.peek().getLexem() != Lexem.LEFT_B) {
-                    expression_result.addBack(stack.pop());
+                    expression_result.add(stack.pop());
                 }
                 stack.pop();
             }
@@ -78,39 +73,30 @@ public class ReversePolishNotation {
         }
         iterate();
         while (!stack.isEmpty()) {
-            expression_result.addBack(stack.pop());
+            expression_result.add(stack.pop());
         }
 
         return expression_result;
     }
 
-    public CatDoublyLinkedList<Token> doTranslationForIf() {
-        CatDoublyLinkedList<Token> if_result = new CatDoublyLinkedList<>();
-        CatDoublyLinkedList tmp = doTranslationForLogicalOp();
-        for (int i = 0; i < tmp.size(); i++) {
-            if_result.addBack((Token) tmp.get(i));
-        }
-        tmp = doTranslationForBody();
-        for (int i = 0; i < tmp.size(); i++) {
-            if_result.addBack((Token) tmp.get(i));
-        }
+    public List<Token> doTranslationForIf() {
+        List<Token> if_result = new ArrayList<>();
+        if_result.addAll(doTranslationForLogicalOp());
+        if_result.addAll(doTranslationForBody());
         int false_pos = if_result.size() + result.size() + 1;
         for (int i = 0; i < if_result.size(); i++) {
-            if (((Token) if_result.get(i)).getLexem() == Lexem.GO_FALSE) {
+            if (if_result.get(i).getLexem() == Lexem.GO_FALSE) {
                 if_result.set(i, new Token(Lexem.GO_FALSE, String.valueOf(false_pos)));
             }
         }
-        if_result.addBack(new Token(Lexem.GO_TRUE, "-1"));
-        if (((Token) tokens.get(tokenIndex)).getLexem() == Lexem.ELSE_KW) {
-            tmp = doTranslationForBody();
-            for (int i = 0; i < tmp.size(); i++) {
-                if_result.addBack((Token) tmp.get(i));
-            }
-            if_result.addBack(new Token(Lexem.IF_KW, "END"));
+        if_result.add(new Token(Lexem.GO_TRUE, "-1"));
+        if (tokens.get(tokenIndex).getLexem() == Lexem.ELSE_KW) {
+            if_result.addAll(doTranslationForBody());
+            if_result.add(new Token(Lexem.IF_KW, "END"));
         }
         int true_pos = if_result.size() + result.size();
         for (int i = 0; i < if_result.size(); i++) {
-            if (((Token) if_result.get(i)).getLexem() == Lexem.GO_TRUE) {
+            if (if_result.get(i).getLexem() == Lexem.GO_TRUE) {
                 if_result.set(i, new Token(Lexem.GO_TRUE, String.valueOf(true_pos)));
             }
         }
@@ -118,66 +104,48 @@ public class ReversePolishNotation {
         return if_result;
     }
 
-    public CatDoublyLinkedList<Token> doTranslationForLogicalOp() {
-        CatDoublyLinkedList<Token> logical_result = new CatDoublyLinkedList<>();
+    public List<Token> doTranslationForLogicalOp() {
+        List<Token> logical_result = new ArrayList<>();
         iterate();
         iterate();
-        CatDoublyLinkedList tmp = doTranslationForExpressionOp(Lexem.RIGHT_B);
-        for (int i = 0; i < tmp.size(); i++) {
-            logical_result.addBack((Token) tmp.get(i));
-        }
-        logical_result.addBack(new Token(Lexem.GO_FALSE, "-1"));
+        logical_result.addAll(doTranslationForExpressionOp(Lexem.RIGHT_B));
+        logical_result.add(new Token(Lexem.GO_FALSE, "-1"));
 
         return logical_result;
     }
 
-    public CatDoublyLinkedList<Token> doTranslationForWhile() {
-        CatDoublyLinkedList<Token> while_result = new CatDoublyLinkedList<>();
-        CatDoublyLinkedList tmp = doTranslationForLogicalOp();
-        for (int i = 0; i < tmp.size(); i++) {
-            while_result.addBack((Token) tmp.get(i));
-        }
-        tmp = doTranslationForBody();
-        for (int i = 0; i < tmp.size(); i++) {
-            while_result.addBack((Token) tmp.get(i));
-        }
+    public List<Token> doTranslationForWhile() {
+        List<Token> while_result = new ArrayList<>();
+        while_result.addAll(doTranslationForLogicalOp());
+        while_result.addAll(doTranslationForBody());
         int false_pos = while_result.size() + result.size() + 1;
         for (int i = 0; i < while_result.size(); i++) {
-            if (((Token) while_result.get(i)).getLexem() == Lexem.GO_FALSE) {
+            if (while_result.get(i).getLexem() == Lexem.GO_FALSE) {
                 while_result.set(i, new Token(Lexem.GO_FALSE, String.valueOf(false_pos)));
             }
         }
-        while_result.addBack(new Token(Lexem.GO_TRUE, "-1"));
+        while_result.add(new Token(Lexem.GO_TRUE, "-1"));
         int true_pos = result.size();
         for (int i = 0; i < while_result.size(); i++) {
-            if (((Token) while_result.get(i)).getLexem() == Lexem.GO_TRUE) {
+            if (while_result.get(i).getLexem() == Lexem.GO_TRUE) {
                 while_result.set(i, new Token(Lexem.GO_TRUE, String.valueOf(true_pos)));
             }
         }
-        while_result.addBack(new Token(Lexem.WHILE_KW, "END"));
+        while_result.add(new Token(Lexem.WHILE_KW, "END"));
 
         return while_result;
     }
 
-    public CatDoublyLinkedList<Token> doTranslationToRPN() {
+    public List<Token> doTranslationToRPN() {
         while (tokenIndex < tokens.size()) {
             if (current_token.getLexem() == Lexem.IF_KW) {
-                CatDoublyLinkedList tmp = doTranslationForIf();
-                for (int i = 0; i < tmp.size(); i++) {
-                    result.addBack((Token) tmp.get(i));
-                }
+                result.addAll(doTranslationForIf());
             }
             else if (current_token.getLexem() == Lexem.WHILE_KW) {
-                CatDoublyLinkedList tmp = doTranslationForWhile();
-                for (int i = 0; i < tmp.size(); i++) {
-                    result.addBack((Token) tmp.get(i));
-                }
+                result.addAll(doTranslationForWhile());
             }
             else {
-                CatDoublyLinkedList tmp = doTranslationForExpressionOp(Lexem.SEMICOLON);
-                for (int i = 0; i < tmp.size(); i++) {
-                    result.addBack((Token) tmp.get(i));
-                }
+                result.addAll(doTranslationForExpressionOp(Lexem.SEMICOLON));
             }
         }
 
@@ -187,7 +155,7 @@ public class ReversePolishNotation {
     private void iterate() {
         tokenIndex += 1;
         if (tokenIndex < tokens.size()) {
-            current_token = (Token) tokens.get(tokenIndex);
+            current_token = tokens.get(tokenIndex);
         }
     }
 
@@ -207,7 +175,7 @@ public class ReversePolishNotation {
         lexemPriority.put(Lexem.DIVISION_OP, 2);
     }
 
-    public CatDoublyLinkedList<Token> translate() {
+    public List<Token> translate() {
         setLexemPriority();
         iterate();
 

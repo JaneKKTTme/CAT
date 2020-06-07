@@ -2,8 +2,6 @@ package stack_machine;
 
 import lexer.Lexem;
 import token.Token;
-import type.hash.CatHashTable;
-import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 
@@ -11,16 +9,16 @@ public class StackMachine{
     private Token current_token;
     private final Stack<Token> stack = new Stack<>();
     private Integer tokenIndex;
-    private final CatDoublyLinkedList<Token> tokens;
-    private final CatHashTable<String, Double> varTable = new CatHashTable<>();
+    private final List<Token> tokens;
+    private final Map<String, Double> varTable = new HashMap<>();
 
-    public StackMachine(CatDoublyLinkedList<Token> tokens) {
+    public StackMachine(List<Token> tokens) {
         this.tokens = tokens;
         this.tokenIndex = -1;
         this.current_token = null;
     }
 
-    public CatHashTable<String, Double> canculate() {
+    public Map<String, Double> canculate() {
         iterate();
         doCanculate();
 
@@ -87,7 +85,7 @@ public class StackMachine{
             else if (current_token.getLexem() == Lexem.GO_FALSE) {
                 Token tmp = stack.pop();
                 String value;
-                if (tmp.getLexem() == Lexem.VAR) {
+                if (tmp.getLexem().equals(Lexem.VAR)) {
                     value = varTable.get(tmp.getValue()).toString();
                 }
                 else {
@@ -106,19 +104,19 @@ public class StackMachine{
 
     public Token doLogicalOp(Double first_element, Double second_element) {
         boolean logical_res = false;
-        if (current_token.getLexem() == Lexem.MORE_LOGICAL_OP) {
+        if (current_token.getLexem().equals(Lexem.MORE_LOGICAL_OP)) {
             logical_res = second_element > first_element;
         }
-        else if (current_token.getLexem() == Lexem.LESS_LOGICAL_OP) {
+        else if (current_token.getLexem().equals(Lexem.LESS_LOGICAL_OP)) {
             logical_res = second_element < first_element;
         }
         else if (current_token.getLexem() == Lexem.MORE_OR_EQUAL_LOGICAL_OP) {
             logical_res = second_element >= first_element;
         }
-        else if (current_token.getLexem() == Lexem.LESS_OR_EQUAL_LOGICAL_OP) {
+        else if (current_token.getLexem().equals(Lexem.LESS_OR_EQUAL_LOGICAL_OP)) {
             logical_res = second_element <= first_element;
         }
-        else if (current_token.getLexem() == Lexem.EQUAL_LOGICAL_OP) {
+        else if (current_token.getLexem().equals(Lexem.EQUAL_LOGICAL_OP)) {
             logical_res = second_element == first_element;
         }
 
@@ -128,7 +126,7 @@ public class StackMachine{
     private void iterate() {
         tokenIndex += 1;
         if (tokenIndex < tokens.size()) {
-            current_token = (Token) tokens.get(tokenIndex);
+            current_token = tokens.get(tokenIndex);
         }
     }
 }

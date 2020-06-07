@@ -1,7 +1,6 @@
 package lexer;
 
 import token.Token;
-import type.lists.CatDoublyLinkedList;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -18,12 +17,10 @@ public class Lexer {
         return rawInput;
     }
 
-    public CatDoublyLinkedList<Token> getTokens() throws Exception {
-        CatDoublyLinkedList<Token> tokens = new CatDoublyLinkedList<Token>();
+    public List<Token> getTokens() throws Exception {
+        List<Token> tokens = new ArrayList<>();
         int lineCounter = 0;
-        CatDoublyLinkedList<String> tmp = getLines(rawInput);
-        for (int i = 0; i < tmp.size(); i++) {
-            String line = tmp.get(i).toString();
+        for (String line : getLines(rawInput)) {
             try {
                 ++lineCounter;
                 while (line.matches("(\\s*\\S+\\s*)+")) {
@@ -37,7 +34,7 @@ public class Lexer {
                         matcher.usePattern(Pattern.compile(real_regex));
                     }
                     String value = matcher.group(0);
-                    tokens.addBack(new Token(relevantLexem, value));
+                    tokens.add(new Token(relevantLexem, value));
                     line = matcher.replaceFirst("");
                 }
             }
@@ -45,10 +42,8 @@ public class Lexer {
                 Scanner scanner = new Scanner(line);
                 String unknownSymbol = scanner.next();
                 scanner.close();
-                throw new Exception("Unknown symbol at line " + lineCounter + " : " + unknownSymbol);
             }
         }
-
         return tokens;
     }
 
@@ -62,12 +57,12 @@ public class Lexer {
         return lexem[curPos + 1];
     }
 
-    private CatDoublyLinkedList<String> getLines(String str) {
+    private List<String> getLines(String str) {
         Scanner scanner = new Scanner(str);
-        CatDoublyLinkedList<String> lines = new CatDoublyLinkedList<String>();
+        List<String> lines = new ArrayList<>();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            lines.addBack(line);
+            lines.add(line);
         }
         scanner.close();
 
