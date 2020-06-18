@@ -5,6 +5,7 @@ import token.Token;
 import stack_machine.StackMachine;
 import type.hash.CatHashTable;
 import type.lists.CatDoublyLinkedList;
+import vartable.VarTable;
 
 import java.util.*;
 
@@ -100,7 +101,7 @@ public class StackMachineTest extends TestCase {
         setData();
         for (int i = 0; i < canculateData.size(); i++) {
             StackMachine rpn = new StackMachine((List<Token>) canculateData.get(i));
-            Map<String, Double> actual = rpn.canculate();
+            VarTable actual = rpn.canculate();
             assertEquals(canculateData.get(i), actual);
         }
     }

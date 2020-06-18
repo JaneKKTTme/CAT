@@ -33,8 +33,19 @@ public class ReversePolishNotation {
         List<Token> expression_result = new ArrayList<>();
         Stack<Token> stack = new Stack<>();
         while (current_token.getLexem() != lexem) {
-            if (current_token.getLexem() == Lexem.DIGIT || current_token.getLexem() == Lexem.VAR ||
-                    current_token.getLexem() == Lexem.BOOL) {
+            if (current_token.getLexem() == Lexem.METHODS) {
+                Token tmp = current_token;
+                iterate();
+                while (current_token.getLexem() != Lexem.RIGHT_B && tokens.get(tokenIndex+1).getLexem() != Lexem.SEMICOLON) {
+                    if (current_token.getLexem().equals(Lexem.DIGIT) || current_token.getLexem().equals(Lexem.BOOL))  {
+                        expression_result.add(current_token);
+                    }
+                    iterate();
+                }
+                expression_result.add(tmp);
+            }
+            else if (current_token.getLexem() == Lexem.DIGIT || current_token.getLexem() == Lexem.VAR ||
+                    current_token.getLexem() == Lexem.BOOL || current_token.getLexem() == Lexem.TYPE) {
                 expression_result.add(current_token);
             }
             else if (current_token.getLexem() == Lexem.ADDITION_OP || current_token.getLexem() == Lexem.SUBTRACTION_OP ||
@@ -46,15 +57,15 @@ public class ReversePolishNotation {
                     stack.push(current_token);
                 }
                 else {
-                    Integer stack_pr = (Integer) lexemPriority.get(stack.peek().getLexem());
-                    Integer current_pr = (Integer) lexemPriority.get(current_token.getLexem());
+                    Integer stack_pr = lexemPriority.get(stack.peek().getLexem());
+                    Integer current_pr = lexemPriority.get(current_token.getLexem());
                     while (stack_pr >= current_pr) {
                         expression_result.add(stack.pop());
                         if (stack.isEmpty()) {
                             break;
                         }
                         else {
-                            stack_pr = (Integer) lexemPriority.get(stack.peek().getLexem());
+                            stack_pr = lexemPriority.get(stack.peek().getLexem());
                         }
                     }
                     stack.push(current_token);
@@ -69,9 +80,13 @@ public class ReversePolishNotation {
                 }
                 stack.pop();
             }
+            if (current_token.getLexem() != Lexem.SEMICOLON) {
+                iterate();
+            }
+        }
+        if (current_token.getLexem() == Lexem.SEMICOLON) {
             iterate();
         }
-        iterate();
         while (!stack.isEmpty()) {
             expression_result.add(stack.pop());
         }
@@ -114,6 +129,17 @@ public class ReversePolishNotation {
         return logical_result;
     }
 
+    public List<Token> doTranslationForOutputOp() {
+        List<Token> output_result = new ArrayList<>();
+        Token tmp = current_token;
+        while (current_token.getLexem() != Lexem.LEFT_B) {
+            iterate();
+        }
+        output_result.addAll(doTranslationForExpressionOp(Lexem.SEMICOLON));
+        output_result.add(tmp);
+        return output_result;
+    }
+
     public List<Token> doTranslationForWhile() {
         List<Token> while_result = new ArrayList<>();
         while_result.addAll(doTranslationForLogicalOp());
@@ -144,6 +170,9 @@ public class ReversePolishNotation {
             else if (current_token.getLexem() == Lexem.WHILE_KW) {
                 result.addAll(doTranslationForWhile());
             }
+            else if (current_token.getLexem() == Lexem.OUTPUT_OP) {
+                result.addAll(doTranslationForOutputOp());
+            }
             else {
                 result.addAll(doTranslationForExpressionOp(Lexem.SEMICOLON));
             }
@@ -173,6 +202,7 @@ public class ReversePolishNotation {
         lexemPriority.put(Lexem.SUBTRACTION_OP, 1);
         lexemPriority.put(Lexem.MULTIPLICATION_OP, 2);
         lexemPriority.put(Lexem.DIVISION_OP, 2);
+        lexemPriority.put(Lexem.METHODS, 1);
     }
 
     public List<Token> translate() {

@@ -1,5 +1,6 @@
 package lexer;
 
+import exception.CatTokenizeException;
 import token.Token;
 
 import java.util.*;
@@ -13,11 +14,7 @@ public class Lexer {
         this.rawInput = rawInput;
     }
 
-    public String getRawInput() {
-        return rawInput;
-    }
-
-    public List<Token> getTokens() throws Exception {
+    public List<Token> getTokens() throws CatTokenizeException{
         List<Token> tokens = new ArrayList<>();
         int lineCounter = 0;
         for (String line : getLines(rawInput)) {
@@ -42,24 +39,30 @@ public class Lexer {
                 Scanner scanner = new Scanner(line);
                 String unknownSymbol = scanner.next();
                 scanner.close();
+
+                throw new CatTokenizeException (
+                        "Unknown symbol at line " + lineCounter + " : " + unknownSymbol
+                );
             }
         }
+
         return tokens;
     }
 
-    private Lexem getNextLexem(Lexem lexemType) throws IndexOutOfBoundsException {
-        int curPos = lexemType.ordinal();
-        Lexem[] lexem = Lexem.values();
-        if (curPos >= lexem.length) {
+    private Lexem getNextLexem(Lexem lexem) throws IndexOutOfBoundsException {
+        int curPos = lexem.ordinal();
+        Lexem[] lexemTypes = Lexem.values();
+
+        if (curPos >= lexemTypes.length) {
             throw new IndexOutOfBoundsException();
         }
 
-        return lexem[curPos + 1];
+        return lexemTypes[curPos + 1];
     }
 
     private List<String> getLines(String str) {
         Scanner scanner = new Scanner(str);
-        List<String> lines = new ArrayList<>();
+        List<String> lines = new ArrayList<String>();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             lines.add(line);

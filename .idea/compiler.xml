@@ -9,8 +9,8 @@
         <module name="CAT" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="13">
-      <module name="CAT" target="13" />
+    <bytecodeTargetLevel target="10">
+      <module name="CAT" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

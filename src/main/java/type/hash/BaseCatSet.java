@@ -4,7 +4,7 @@ public interface BaseCatSet {
 
     void put(Object key, Object value);
 
-    boolean remove(Object object);
+    void remove(Object object);
 
     Object get(Object object);
 

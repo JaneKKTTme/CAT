@@ -23,12 +23,6 @@ public class CatHashTable<K, V> implements BaseCatSet{
             this.next = null;
         }
 
-        public void remove() {
-            this.key = null;
-            this.value = null;
-            this.next = null;
-        }
-
         public String toString() {
             return "[" + key + ", " + value + "]";
         }
@@ -61,94 +55,114 @@ public class CatHashTable<K, V> implements BaseCatSet{
 
     @Override
     public void put(Object key, Object value) {
-        int hash = hash(key);
-        final CatHashEntry hashEntry = new CatHashEntry(key, value);
-        if(buckets[hash] == null) {
-            buckets[hash] = hashEntry;
+        int bucket = hash(key);
+        CatHashEntry list = buckets[bucket];
+        while (list != null) {
+            if (list.key.equals(key))
+                break;
+            list = list.next;
+        }
+        if (list != null) {
+            list.value = value;
         }
         else {
-            CatHashEntry temp = buckets[hash];
-            while(temp.next != null) {
-                temp = temp.next;
+            if (size >= 0.75*buckets.length) {
+                resize();
             }
-            temp.next = hashEntry;
+            CatHashEntry newNode = new CatHashEntry();
+            newNode.key = key;
+            newNode.value = value;
+            newNode.next = buckets[bucket];
+            buckets[bucket] = newNode;
+            size++;
         }
-        size++;
+    }
+
+    private void resize() {
+        CatHashEntry[] newtable = new CatHashEntry[buckets.length*2];
+        for (int i = 0; i < buckets.length; i++) {
+            CatHashEntry list = buckets[i];
+            while (list != null) {
+                CatHashEntry next = list.next;
+                int hash = (Math.abs(list.key.hashCode())) % newtable.length;
+                list.next = newtable[hash];
+                newtable[hash] = list;
+                list = next;
+            }
+        }
+        buckets = newtable;
     }
 
     @Override
-    public boolean remove(Object object) {
-        int h = object.hashCode();
-        if (h < 0) { h = -h; }
-        h = h % buckets.length;
-        CatHashEntry current = buckets[h];
-        CatHashEntry previous = null;
-        while (current != null)
-        {
-            if (current.value.equals(object))
-            {
-                if (previous == null) { buckets[h] = current.next; }
-                else { previous.next = current.next; }
-                size--;
-                return true;
-            }
-            previous = current;
-            current = current.next;
+    public void remove(Object key) {
+        int bucket = hash(key);
+        if (buckets[bucket] == null) {
+            return;
         }
-        return false;
+        if (buckets[bucket].key.equals(key)) {
+            buckets[bucket] = buckets[bucket].next;
+            size--;
+            return;
+        }
+        CatHashEntry prev = buckets[bucket];
+        CatHashEntry curr = prev.next;
+        while (curr != null && ! curr.key.equals(key)) {
+            curr = curr.next;
+            prev = curr;
+        }
+        if (curr != null) {
+            prev.next = curr.next;
+            size--;
+        }
     }
 
     @Override
-    public boolean contains(Object object) {
-        int index = hash(object.hashCode());
+    public boolean contains(Object key) {
+        int index = hash(key.hashCode());
         CatHashEntry current = buckets[index];
         while (current != null) {
-            if (current.value.equals(object)) { return true; }
+            if (current.value.equals(key)) { return true; }
             current = current.next;
         }
         return false;
     }
 
     public String toString() {
-        int bucket = 0;
-        StringBuilder hashTableStr = new StringBuilder();
-        for (CatHashEntry entry : buckets) {
-            if(entry == null) {
-                continue;
+        String output = "{";
+        for (int i = 0; i < buckets.length; i++) {
+            CatHashEntry list = buckets[i];
+            while (list != null) {
+                output += list.key + "=" + list.value;
+                if (list.next == null && i < size-1) {
+                    output += ", ";
+                }
+                list = list.next;
             }
-            hashTableStr.append("\n bucket[")
-                    .append(bucket)
-                    .append("] = ")
-                    .append(entry.toString());
-            bucket++;
-            CatHashEntry temp = entry.next;
-            while(temp != null) {
-                hashTableStr.append(" -> ");
-                hashTableStr.append(temp.toString());
-                temp = temp.next;
+            if (i < size && i > 0) {
+                output += ", ";
             }
         }
-        return hashTableStr.toString();
+        output += "}";
+        return output;
     }
 
     public void clear() {
         for (int i = 0; i < BUCKET_SIZE && i < size; ++i) {
-            System.out.println(buckets[i]);
-            buckets[i].remove();
+            remove(buckets[i]);
         }
         size = 0;
     }
 
     @Override
-    public Object get(Object object) {
-        int hash = hash(object);
-        if(buckets[hash] != null) {
-            CatHashEntry temp = buckets[hash];
-            while( !temp.key.equals(object)
-                    && temp.next != null ) {
-                temp = temp.next;
+    public Object get(Object key) {
+        int lookupPosition = hash(key);
+        CatHashEntry retrievedNode = buckets[lookupPosition];
+        while (retrievedNode != null) {
+            if (retrievedNode.key.equals(key)) {
+                return retrievedNode.value;
+            } else {
+                retrievedNode = retrievedNode.next;
             }
-            return temp.value;
         }
         return null;
     }
@@ -159,17 +173,16 @@ public class CatHashTable<K, V> implements BaseCatSet{
 
     public static void main(String[] args) {
         CatHashTable<Integer, Integer> hashTable = new CatHashTable<>();
-        hashTable.put(1, 0);
-        hashTable.put(32, 22);
         hashTable.put(1, 2);
-        hashTable.put(2, 4);
+        hashTable.put(3, 4);
         System.out.println(hashTable.toString());
+        //hashTable.remove(1);
+        System.out.println(hashTable.get(1));
 
         Map<Integer, Integer> hashMap = new HashMap<>();
-        hashMap.put(1, 0);
-        hashMap.put(32, 22);
         hashMap.put(1, 2);
-        hashMap.put(2, 4);
-        System.out.println(hashMap.toString());
+        hashMap.put(3, 4);
+        //hashMap.remove(1);
+        System.out.println("\n\n" + hashMap.get(3));
     }
 }
