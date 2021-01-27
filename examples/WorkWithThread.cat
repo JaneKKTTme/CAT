@@ -1,0 +1,9 @@
+function &main(count) {
+ i<-0;
+ ! (i < count) { print(i); i<-i+1; }
+}
+
+function &threadFunction() { &main(10); }
+
+&threadFunction;
+&main(10);

@@ -1,0 +1,7 @@
+a<-list;
+a.add(1);
+a.add(2);
+print(a);
+a.get(0);
+a.remove(1);
+print(a);

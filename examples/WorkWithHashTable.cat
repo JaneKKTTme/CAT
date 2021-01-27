@@ -1,0 +1,7 @@
+a<-hashtable;
+say(a);
+a.put(1,2);
+a.put(3,4);
+print(a);
+a.remove(1);
+print(a);
