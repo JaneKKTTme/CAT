@@ -1,6 +1,6 @@
-package type.hash;
+package types.hash;
 
-import type.lists.CatDoublyLinkedList;
+import types.lists.CatDoublyLinkedList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class CatHashTable<K, V> implements BaseCatSet{
         }
 
         public String toString() {
-            return "[" + key + ", " + value + "]";
+            return key + ": " + value;
         }
     }
 
@@ -128,11 +128,11 @@ public class CatHashTable<K, V> implements BaseCatSet{
     }
 
     public String toString() {
-        String output = "{";
+        String output = "{ ";
         for (int i = 0; i < buckets.length; i++) {
             CatHashEntry list = buckets[i];
             while (list != null) {
-                output += list.key + "=" + list.value;
+                output += list.key + " : " + list.value;
                 if (list.next == null && i < size-1) {
                     output += ", ";
                 }
@@ -142,7 +142,7 @@ public class CatHashTable<K, V> implements BaseCatSet{
                 output += ", ";
             }
         }
-        output += "}";
+        output += " }";
         return output;
     }
 

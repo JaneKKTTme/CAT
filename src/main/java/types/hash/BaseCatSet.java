@@ -1,4 +1,4 @@
-package type.hash;
+package types.hash;
 
 public interface BaseCatSet {
 

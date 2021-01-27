@@ -1,4 +1,4 @@
-package type.lists;
+package types.lists;
 
 public interface BaseCatList {
 

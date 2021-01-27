@@ -1,4 +1,4 @@
-package type.lists;
+package types.lists;
 
 public class CatDoublyLinkedList<T> implements BaseCatList{
     public class CatNode<T> {
@@ -35,7 +35,7 @@ public class CatDoublyLinkedList<T> implements BaseCatList{
         this.totalQuantity = 0;
     }
 
-    public void addBack(T value) {
+    public void add(T value) {
         CatNode catNode = new CatNode(value);
         if(head == null) {
             head = tail = catNode;
@@ -51,7 +51,7 @@ public class CatDoublyLinkedList<T> implements BaseCatList{
         totalQuantity++;
     }
 
-    public void addFront(T value) {
+    public void putFront(T value) {
         CatNode catNode = new CatNode(value, null, head);
         head = catNode;
         if (tail == null) {
@@ -204,5 +204,9 @@ public class CatDoublyLinkedList<T> implements BaseCatList{
 
     public int size() {
         return totalQuantity;
+    }
+
+    public void clear() {
+        head = tail = null;
     }
 }
