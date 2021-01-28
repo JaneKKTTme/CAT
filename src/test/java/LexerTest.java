@@ -3,7 +3,7 @@ import junit.framework.TestCase;
 import lexer.Lexem;
 import lexer.Lexer;
 import token.Token;
-import type.lists.CatDoublyLinkedList;
+import types.lists.CatDoublyLinkedList;
 
 import java.util.*;
 

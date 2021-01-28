@@ -1,13 +1,13 @@
-function @doIt() {
+function &doIt() {
  return 5;
 }
 
-function @main(a) {
+function &main(a) {
  b<-a+2;
  ?(b>a){a<-a+1;};
  !(a<b){a<-a+b;};
  print(a+b);
 }
 
-a<-@doIt();
-@main(a);
+a<-&doIt();
+&main(a);
